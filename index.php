@@ -1,11 +1,31 @@
 <?php
 
-require './config/envConfig.php';
-require './Database.php';
-require './controllers/UserController.php';
+require 'Router.php';
 
-$db = Database::connect();
-$userController = new UserController($db);
+$app = new Router();
 
-//var_dump($userController->create('Gustavo Morais', 'gusxmorais@gmail.com', '123123'));
-var_dump($userController->list());
+class ItemController {
+
+  public function index(Request $req, Response $res)
+  {
+    if ($req->params->itemname) {
+      echo 'ok';
+    }
+  }
+
+  public function create(Request $req, Response $res)
+  {
+    $res->status(201)->json('gustavo');
+  }
+
+  public function delete()
+  {
+    return 'Object deleted';
+  }
+
+}
+
+
+$app->get('/item/:itemname', 'ItemController::index');
+$app->post('/create', 'ItemController::create');
+$app->delete('/delete', 'ItemController::delete');
