@@ -8,9 +8,7 @@ class ItemController {
 
   public function index(Request $req, Response $res)
   {
-    if ($req->params->itemname) {
-      echo 'ok';
-    }
+    echo $req->params->itemname;
   }
 
   public function create(Request $req, Response $res)
@@ -25,7 +23,4 @@ class ItemController {
 
 }
 
-
 $app->get('/item/:itemname', 'ItemController::index');
-$app->post('/create', 'ItemController::create');
-$app->delete('/delete', 'ItemController::delete');

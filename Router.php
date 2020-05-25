@@ -2,6 +2,7 @@
 
 class Request {
 
+  public ? string $method  = null;
   public ? object $params  = null;
   public ? object $query   = null;
   public ? object $headers = null;
@@ -37,34 +38,13 @@ class Router {
     $route = $_SERVER['REQUEST_URI'];
     $queries = [];
     $param = [];
-
+    
     if (strstr($route, '?')) {
-      $splitedRoute = explode('?', $route);
-      $route = $splitedRoute[0];
-      $rawQuery = $splitedRoute[1];
+      $route = explode('?', $route)[0];
+    }
 
-      if (strlen($rawQuery) > 0) {
-        if (strstr($rawQuery, '&')) {
-          $splitedQuery = explode('&', $rawQuery);
-          
-          foreach ($splitedQuery as $rawQuery) {
-            if (strstr($rawQuery, '=')) {
-              $query = explode('=', $rawQuery);
-              $queries[$query[0]] = $query[1];
-            } else {
-              $queries[] = $rawQuery;
-            }
-            
-          }
-        } else {
-          if (strstr($rawQuery, '=')) {
-            $query = explode('=', $rawQuery);
-            $queries[$query[0]] = $query[1];
-          } else {
-            $queries[] = $rawQuery;
-          }
-        }
-      }
+    if (substr($route, -1) == '/') {
+      $route = substr($route, 0, -1);
     }
 
     $this->request = new Request();
@@ -72,28 +52,37 @@ class Router {
     $this->route = $route;
     $this->routePaths = explode('/', $this->route);
     
-    $this->request->query = (object) $queries;
+    $this->request->query = (object) $_GET;
     $this->request->body = (object) $_POST;
-    $this->request->method = (object) $_SERVER['REQUEST_METHOD'];
+    $this->request->method = $_SERVER['REQUEST_METHOD'];
   }
 
   public function __destruct()
   {
     if ($this->notFound) {
-      echo 'Cannot ' . $this->method . ' ' . $this->route;
+      echo 'Cannot ' . $this->request->method . ' ' . $this->route;
     }
   }
 
   private function verify(string $route)
   {
     if (strstr($route, '/:')) {
+      $breakAt = strpos($route, '/:');
       $splitedRoute = explode('/:', $route);
-      $route = $splitedRoute[0];
-      $this->route = $route;
+      $abstractRoute = $splitedRoute[0];
+
+      if (
+          !substr($this->route, $breakAt) && substr($route, -1) != '?' 
+          || strstr(substr($this->route, $breakAt + 1, -1), '/')
+        ) {
+          exit();
+      } 
+      
+      $this->route = substr($this->route, 0, $breakAt);
       $this->request->params = (object) [$splitedRoute[1] => array_pop($this->routePaths)];
     }
 
-    if ($route != $this->route) {
+    if ($abstractRoute != $this->route) {
       exit();
     } else {
       return $this->notFound = false;  
